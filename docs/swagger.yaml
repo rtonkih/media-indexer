@@ -1,0 +1,199 @@
+definitions:
+  controllers.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  controllers.MediaResponse:
+    properties:
+      id:
+        type: integer
+      link:
+        type: string
+      name:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
+  controllers.PaginatedMediaResponse:
+    properties:
+      media:
+        items:
+          $ref: '#/definitions/controllers.SearchMediaResponse'
+        type: array
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  controllers.PaginatedTagsResponse:
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      tags:
+        items:
+          $ref: '#/definitions/controllers.TagResponse'
+        type: array
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  controllers.SearchMediaResponse:
+    properties:
+      fileUrl:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
+  controllers.TagResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /media:
+    get:
+      consumes:
+      - application/json
+      description: Search for media items by tag name
+      parameters:
+      - collectionFormat: csv
+        description: Tag name(s) to search for
+        in: query
+        items:
+          type: string
+        name: tag
+        required: true
+        type: array
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of media items per page
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search results
+          schema:
+            $ref: '#/definitions/controllers.PaginatedMediaResponse'
+      summary: Search media by tag
+      tags:
+      - media
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new media item with associated tags
+      parameters:
+      - description: Name of the media
+        in: formData
+        name: name
+        required: true
+        type: string
+      - collectionFormat: csv
+        description: Tags associated with the media
+        in: formData
+        items:
+          type: string
+        name: tags
+        required: true
+        type: array
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created media
+          schema:
+            $ref: '#/definitions/controllers.MediaResponse'
+      summary: Create media
+      tags:
+      - media
+  /tags:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all tags with pagination
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of tags per page
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of tags with pagination
+          schema:
+            $ref: '#/definitions/controllers.PaginatedTagsResponse'
+        "500":
+          description: Failed to retrieve tags
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+      summary: List all tags
+      tags:
+      - tags
+    post:
+      consumes:
+      - application/json
+      description: Create a new tag with the given name
+      parameters:
+      - description: Tag name
+        in: body
+        name: tag
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created tag
+          schema:
+            $ref: '#/definitions/controllers.TagResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+        "409":
+          description: Tag already exists
+          schema:
+            $ref: '#/definitions/controllers.TagResponse'
+        "500":
+          description: Failed to create tag
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+      summary: Create a new tag
+      tags:
+      - tags
+swagger: "2.0"
