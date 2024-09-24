@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=secret
+      - DB_NAME=database
+      - STORAGE_TYPE=s3
+      - GIN_MODE=${GIN_MODE:-debug}
+      - CGO_ENABLED=1
+    depends_on:
+      - postgres
+    networks:
+      - default-network
+    command: >
+      sh -c "
+            if [ '$${MODE}' = 'prod' ]; then
+              go build -o /app/myapp main.go && /app/myapp;
+            else
+              go run tools/migrate/migrate.go && go run main.go;
+            fi
+      "
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: database
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - default-network
+
+networks:
+  default-network:
+    driver: bridge
+
+volumes:
+  pgdata:
